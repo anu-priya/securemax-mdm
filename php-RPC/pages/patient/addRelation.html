@@ -1,0 +1,111 @@
+<?php
+include '../../includes/header.php';
+$message = '';
+
+if(isset($_POST) && !empty($_POST)) {
+  $postData = array(
+    "relationType" => $_POST['relationType']
+  );
+  
+  //echo BASE_WS_URL.$ws_url['authenticateUser'];
+  $relationAdd = WSModel::get_ws_service(BASE_WS_URL.$ws_url['relationAdd'], $postData);
+  //echo "<pre>"; print_r($relationAdd); exit;
+
+  if(isset($relationAdd) && $relationAdd->status == 1) {
+    $_SESSION['message'] = '<div class="alert alert-success alert-dismissable">
+                  <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                  <h4><i class="icon fa fa-check"></i> Success </h4>
+                  Relation record inserted.
+                </div>';
+    header('Location: '.BASE_URL.'pages/patient/relations.html');
+  } else if(isset($relationAdd) && $relationAdd->status == 2){
+    $message = '<div class="alert alert-danger alert-dismissable">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    <h4><i class="icon fa fa-ban"></i> Alert!</h4>
+                    Another record with same Relation Type already exists.
+                  </div>';
+  } else {
+    $message = '<div class="alert alert-danger alert-dismissable">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    <h4><i class="icon fa fa-ban"></i> Alert!</h4>
+                    Problem in inserting the record.
+                  </div>';
+  }
+}
+
+?>
+
+  <?php include_once(BASE_DIR . 'includes/htmlheader.php');?>
+    <div class="wrapper">
+      <?php print mainHeader(); ?>      
+      
+      <?php print sideMenu(); ?>
+
+      <!-- Content Wrapper. Contains page content -->
+      <div class="content-wrapper">
+        <!-- Content Header (Page header) -->
+        <section class="content-header">
+          <h1>
+            Add Relation
+          </h1>
+          <ol class="breadcrumb">
+            <li><a href="<?php echo BASE_URL; ?>"><i class="fa fa-dashboard"></i> Home</a></li>
+            <li><a href="<?php echo BASE_URL.'pages/patient/relations.html'; ?>"></i> Relations</a></li>
+            <li class="active">Add Relation</li>
+          </ol>
+        </section>
+
+        <!-- Main content -->
+        <section class="content">
+          <div class="row">
+            <div class="col-xs-12">
+              <!-- general form elements -->
+              <div class="box box-primary">
+                <?php echo $message; ?>
+                <!-- form start -->
+
+                <div class="row">
+                  <form id="rpc-add-relation" action="" method="post">
+                    <div class="col-xs-6">
+                      <div class="box-body">
+                        <div class="form-group">
+                          <label for="relationType">Relation Type</label>
+                          <input type="text" tabindex="1" class="form-control" id="relationType" name="relationType" placeholder="Enter Relation type">
+                        </div>
+                        
+                        <div class="box-footer">
+                          <button type="submit" class="btn btn-primary" tabindex="2">Submit</button>
+                        </div>
+                        
+                      </div><!-- /.box-body -->
+                    </div>
+                  </form>
+                </div>
+                  
+              </div><!-- /.box -->
+            </div><!-- /.col -->
+          </div><!-- /.row -->
+        </section><!-- /.content -->
+      </div><!-- /.content-wrapper -->
+      
+      <!-- Add the sidebar's background. This div must be placed
+           immediately after the control sidebar -->
+      <div class="control-sidebar-bg"></div>
+    </div><!-- ./wrapper -->
+    <?php include_once(BASE_DIR . 'includes/htmlfooter.php');?>
+    <!-- page script -->
+    <script>
+      $(function () {
+        $("#rpc-add-relation").validate({
+          onfocusout: false,//function(element) {$(element).valid();},
+          // Specify the validation rules
+          rules: {
+            relationType: {required: true}
+          },
+
+          submitHandler: function(form) {
+            form.submit();
+          }
+        });
+      });
+    </script>

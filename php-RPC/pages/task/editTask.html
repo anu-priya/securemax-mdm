@@ -1,0 +1,120 @@
+<?php
+include '../../includes/header.php';
+
+$message = '';
+
+if(isset($_POST) && !empty($_POST)) {
+  $postData = array(
+    "id" => $_POST['taskInputId'],
+    "taskname" => $_POST['taskname']
+  );
+  
+  //echo "<pre>"; print_r($postData); exit;
+  
+
+  $taskUpdate = WSModel::get_ws_service(BASE_WS_URL.$ws_url['taskUpdate'], $postData, TRUE, 'PUT');
+  $taskUpdate = json_decode($taskUpdate);
+  // echo "<pre>"; print_r($taskUpdate); exit;
+
+  if(isset($taskUpdate) && $taskUpdate->status == 1) {
+    $message = '<div class="alert alert-success alert-dismissable">
+                  <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                  <h4><i class="icon fa fa-check"></i> Success </h4>
+                  Task record updated.
+                </div>';
+  } else if(isset($taskUpdate) && $taskUpdate->status == 2){
+    $message = '<div class="alert alert-danger alert-dismissable">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    <h4><i class="icon fa fa-ban"></i> Alert!</h4>
+                    Another record with same Task Name already exists.
+                  </div>';
+  } else {
+    $message = '<div class="alert alert-danger alert-dismissable">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    <h4><i class="icon fa fa-ban"></i> Alert!</h4>
+                    Problem in updating the record.
+                  </div>';
+  }
+}
+
+if(isset($_GET['taskId']) && is_numeric($_GET['taskId'])) {
+  $taskData = WSModel::get_ws_service(BASE_WS_URL.$ws_url['taskData'].$_GET['taskId']);
+  
+  if(isset($taskData->status) && $taskData->status == 1) {
+    $task = $taskData->response;
+  }
+}
+?>
+<?php include_once(BASE_DIR . 'includes/htmlheader.php');?>
+    <div class="wrapper">
+      <?php print mainHeader(); ?>      
+      
+      <?php print sideMenu(); ?>
+
+      <!-- Content Wrapper. Contains page content -->
+      <div class="content-wrapper">
+        <!-- Content Header (Page header) -->
+        <section class="content-header">
+          <h1>
+            Edit Task
+          </h1>
+          <ol class="breadcrumb">
+            <li><a href="<?php echo BASE_URL; ?>"><i class="fa fa-dashboard"></i> Home</a></li>
+            <li><a href="<?php echo BASE_URL.'pages/task/tasks.html'; ?>"></i> Tasks</a></li>
+            <li class="active">Edit Task</li>
+          </ol>
+        </section>
+
+        <!-- Main content -->
+        <section class="content">
+          <div class="row">
+            <div class="col-xs-12">
+              <!-- general form elements -->
+              <div class="box box-primary">
+                <?php echo $message; ?>
+                <!-- form start -->
+
+                <div class="row">
+                  <form id="rpc-edit-task" action="" method="post">
+                    <div class="col-xs-6">
+                      <div class="box-body">
+                        <div class="form-group">
+                          <label for="taskname">Task Name</label>
+                          <input type="text" tabindex="1" class="form-control" id="taskname" name="taskname" placeholder="Enter Task" value="<?php echo $task->taskname; ?>">
+                        </div>
+                        
+                        <div class="box-footer">
+                          <input type="hidden" class="form-control" id="taskInputId" name="taskInputId" value="<?php echo $task->id; ?>">
+                          <button type="submit" class="btn btn-primary" tabindex="2">Submit</button>
+                        </div>
+                        
+                      </div><!-- /.box-body -->
+                    </div>
+                  </form>
+                </div>
+                
+              </div><!-- /.box -->
+            </div><!-- /.col -->
+          </div><!-- /.row -->
+        </section><!-- /.content -->
+      </div><!-- /.content-wrapper -->
+      <?php include_once(BASE_DIR . 'includes/htmlfooter.php');?>
+    </div><!-- ./wrapper -->
+	<script>
+      $(function () {
+        $("#rpc-edit-task").validate({
+		   //alert('wewe');
+           onfocusout: function(element) {$(element).valid();},
+          // Specify the validation rules
+          rules: {
+            taskname: {required: true,minlength: 3}
+          },
+
+          submitHandler: function(form) {
+            form.submit();
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

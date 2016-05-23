@@ -1,0 +1,223 @@
+<?php
+include '../../includes/header.php';
+$message = '';
+
+if(isset($_SESSION['message'])) {
+  $message = $_SESSION['message'];
+  unset($_SESSION['message']);
+}
+if(isset($_POST) && !empty($_POST)) {
+	if(!empty($_POST['appointmentSearchBy'])) {
+		if($_POST['appointmentSearchBy'] == "today") {
+			$allAppointment = WSModel::get_ws_service(BASE_WS_URL.$ws_url['appSearchByToday']);
+		} else {
+			if(!empty($_POST['appointmentFromDate']) && !empty($_POST['appointmentToDate'])) {
+				//$from_date = explode("/", $_POST['appointmentFromDate']);
+				$appointmentFromDate = date('Y-m-d H:i:s', strtotime($_POST['appointmentFromDate']));;
+				//$to_date = explode("/", $_POST['appointmentToDate']);
+				$appointmentToDate = date('Y-m-d H:i:s', strtotime($_POST['appointmentToDate']));;
+				$postData = array(
+					'fromDate' => $appointmentFromDate, 
+					'toDate' => $appointmentToDate
+				);
+				$allAppointment = WSModel::get_ws_service(BASE_WS_URL.$ws_url['appSearchDateBetween'], $postData);
+			}
+		}
+	}
+} else {
+	$allAppointment = WSModel::get_ws_service(BASE_WS_URL.$ws_url['allAppointments']);
+}
+// echo "<pre>"; print_r($allAppointment); exit;
+$allPatients = WSModel::get_ws_service(BASE_WS_URL.$ws_url['allPatients']);
+?>
+<?php include_once(BASE_DIR . 'includes/htmlheader.php');?>
+    <div class="wrapper">
+      <?php print mainHeader(); ?>      
+      
+      <?php print sideMenu(); ?>
+
+      <!-- Content Wrapper. Contains page content -->
+      <div class="content-wrapper">
+        <!-- Content Header (Page header) -->
+        <section class="content-header">
+          <h1>
+            Appointments
+          </h1>
+          <ol class="breadcrumb">
+            <li><a href="<?php echo BASE_URL; ?>"><i class="fa fa-dashboard"></i> Home</a></li>
+            <li class="active">Appointments</li>
+          </ol>
+        </section>
+
+        <!-- Main content -->
+        <section class="content">
+          <div class="row">
+            <div class="col-xs-12">
+              <div class="box">
+                <div class="box-header">
+                  <?php echo $message; ?>
+                  <div class="add-link">
+                    <?php echo '<a class="btn btn-info pull-right" href="'.BASE_URL.'pages/appointment/addAppointment.html">ADD APPOINTMENT</a>'; ?>
+                  </div>
+                </div><!-- /.box-header -->
+								
+				<form id="rpc-edit-appointment" action="" method="post">
+					<div class="col-xs-6">
+						<div class="box-body">
+							<div class="form-group">
+								<label for="appointmentSearchBy">Search By</label>
+								<select class="form-control" id="appointmentSearchBy" name="appointmentSearchBy">
+								<option value="today" <?php echo ((!empty($_POST['appointmentSearchBy']) && $_POST['appointmentSearchBy'] == "today")?'selected':''); ?>>Today</option>
+								<option value="twodate" <?php echo ((!empty($_POST['appointmentSearchBy']) && $_POST['appointmentSearchBy'] == "twodate")?'selected':''); ?>>Between the Date</option>
+							  </select>
+							</div>
+							<div class="form-group" id="fromDate">
+								<label for="appointmentFromDate">From Date</label>
+								<div class='form-group' id='datetimepicker1'>
+									<input type='text' class="form-control" name="appointmentFromDate" id="appointmentFromDate" placeholder="Select From Date" value="<?php echo date('Y-m-d H:i:s', strtotime(@$_POST['appointmentFromDate'])); ?>" readonly />
+								</div>
+							</div>
+							<div class="box-footer">
+								<button type="submit" class="btn btn-primary" tabindex="12">Search</button> 
+								<button type="button" class="btn btn-primary" tabindex="12" style="margin-left:10px;" id="appbtnReset">Reset</button>
+							</div>
+						</div>
+					</div>
+					<div class="col-xs-6">
+						<div class="box-body">
+							<div class="form-group">
+								<div style="padding:20px 0 19px 0;">&nbsp;</div>
+							</div>
+							<div class="form-group" id="toDate">
+								<label for="appointmentToDate">To Date</label>
+								<div class='form-group' id='datetimepicker2'>
+									<input type='text' class="form-control" name="appointmentToDate" id="appointmentToDate" placeholder="Select To Date" value="<?php echo date('Y-m-d H:i:s', strtotime(@$_POST['appointmentToDate'])); ?>" readonly />
+								</div>
+							</div>
+							<div class="box-footer">
+								&nbsp;
+							</div>
+						</div>
+					</div>
+				</form>
+				<div style="clear:both;"></div>
+                <div class="box-body">
+                  <?php if(isset($allAppointment->response) && !empty($allAppointment->response)) { ?>
+                  <table id="appointments-list" class="table table-bordered table-striped">
+                    <thead>
+                      <tr>
+                        <th>ID</th>
+                        <th>Date</th>
+                        <th>Duration</th>
+                        <th>Patient</th>
+                        <th>Doctor</th>
+						            <th>Care Giver</th>
+                        <th>Status</th>
+                        <th>Operations</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($allAppointment->response as $key => $val) { if (!isset($val->doctorName) ) continue; ?>
+                          <?php
+                            $viewLink = '<a href="'.BASE_URL.'pages/appointment/info.html?id='.$val->id.'">VIEW</a>';
+                            $editLink = '<a href="'.BASE_URL.'pages/appointment/editAppointment.html?appId='.$val->id.'">EDIT</a>';
+                            $deleteLink = '<a href="'.BASE_URL.'pages/appointment/delete.php?id='.$val->id.'" class="ptdel" data-id="'.$val->id.'" title="Are you sure you want to delete the appointment record?">DELETE</a>';
+                            //$operations = $editLink.' | '.$deleteLink; //delete option removed in appointments
+							$operations = $editLink;
+                          ?>
+                          <tr>
+                            <td><?php echo $val->id; ?></td>
+                            <td><?php echo $val->appointmentDate; ?></td>
+                            <td><?php echo $val->duration; ?></td>
+                            <td><?php echo $val->patientName; ?></td>
+                            <td><?php echo $val->doctorName; ?></td>
+							<td><?php echo $val->careGiverName; ?></td>
+							<?php
+							$status = 'Cancelled';
+							if($val->status == 1) {
+								$status = 'Open';
+							}
+							else if($val->status == 2){
+								$status = 'Completed';
+							}
+							?>
+                            <td><?php echo $status; ?></td>
+                            <td><?php echo $operations; ?></td>
+                          </tr>
+                        <?php } ?>
+                    </tbody>
+                  </table>
+                  <?php } else { ?>
+                    <p>No records found or the server is not reachable now. Please login again.</p>
+                  <?php } ?>
+                </div><!-- /.box-body -->
+              </div><!-- /.box -->
+            </div><!-- /.col -->
+          </div><!-- /.row -->
+        </section><!-- /.content -->
+      </div><!-- /.content-wrapper -->
+    <?php include_once(BASE_DIR . 'includes/htmlfooter.php');?>
+    </div><!-- ./wrapper -->
+	<script>
+      $(function () {
+        $('#appointments-list').DataTable();
+        
+        $(".ptdel").easyconfirm();
+        $('.ptdel').click(function() {
+          var delID = $(this).attr('data-id');
+          /*
+          if(checkstr == true){
+            alert("HIere");  
+            $.ajax({
+              method: 'GET',
+              url: "delete.php",
+              data: {action: "pt", id: delID}
+            }).done(function( data ) {
+              alert(data);
+              if(data > 0) {
+                $('#tr_'+delID).remove();
+                alert("Patient deleted successfully");
+              }
+            });
+          }else{
+          return false;
+          }
+          */
+        });
+		$('#appointmentFromDate').datetimepicker({
+			 format: 'Y-m-d H:i',
+        step: 1,
+        maxDate: 0
+		});
+		$('#appointmentToDate').datetimepicker({
+			format: 'Y-m-d H:i'
+		});	
+		$( "#appbtnReset" ).click(function() {
+      location.href ="<?php echo BASE_URL?>pages/appointment/appointments.html";
+    });
+    $( "#btnReset" ).click(function() {
+			location.href ="<?php echo BASE_URL?>pages/user/listUser.html";
+		});	
+		
+		$( "#fromDate" ).hide();
+		$( "#toDate" ).hide();
+		if($( "#appointmentSearchBy" ).val() == "twodate") {
+			 $( "#fromDate" ).show();
+			 $( "#toDate" ).show();
+		 } else {
+			$( "#fromDate" ).hide();
+			$( "#toDate" ).hide();
+		 }
+		$( "#appointmentSearchBy" ).change(function() {
+			if($( "#appointmentSearchBy" ).val() == "twodate") {
+				 $( "#fromDate" ).show();
+				 $( "#toDate" ).show();
+			 } else {
+				$( "#fromDate" ).hide();
+				$( "#toDate" ).hide();
+			 }
+		});
+		
+      });
+    </script>
+

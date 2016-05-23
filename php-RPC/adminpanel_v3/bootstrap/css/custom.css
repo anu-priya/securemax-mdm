@@ -1,0 +1,15 @@
+#messge_flash {
+    border-radius: 0.25em;
+    color: green;
+    display: inline;
+    font-size: 75%;
+    font-weight: 700;
+    line-height: 1;
+    padding: 0.2em 0.6em 0.3em;
+    text-align: center;
+    vertical-align: baseline;
+    white-space: nowrap;
+	margin-left:610px;
+	font-size:14px;
+	padding:5px 30px 5px 30px;
+}

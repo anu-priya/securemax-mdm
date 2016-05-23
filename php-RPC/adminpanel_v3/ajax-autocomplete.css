@@ -1,0 +1,46 @@
+input:focus, textarea:focus {
+    outline: medium none;
+}
+label, select, button, input[type="submit"], input[type="radio"], input[type="checkbox"] input[type="button"] {
+    cursor: pointer;
+}
+input {
+    background: #f5f5f5 none repeat scroll 0 0;
+    border: 1px solid #eee;
+    margin-bottom: 1px;
+    padding: 20px;
+    width: 100%;
+}
+#loader {
+    position: absolute;
+    right: 5%;
+    top: 14%;
+    z-index: 9999;
+}
+#search_suggestion_holder {
+  /*border-color: -moz-use-text-color #f8f8f8 #f8f8f8;
+    border-style: none solid solid;
+    border-width: medium 1px 1px;*/
+    display: none;
+    list-style: outside none none;
+}
+#search_suggestion_holder li:hover {
+    background-color: #fafafa;
+}
+.selected {
+    background-color: #fafafa !important;
+}
+#search_suggestion_holder li {
+    /*background-color: #f0f0f0;
+    border-bottom: 1px solid #ddd;*/
+    color: #c1c1c1;
+    cursor: pointer;
+    display: block;
+    margin-bottom: 0;
+    padding: 4px;
+    /*text-shadow: 1px 1px 4px #fff;*/
+	margin-left: -37px;
+}
+#loader {
+    display: none;
+}

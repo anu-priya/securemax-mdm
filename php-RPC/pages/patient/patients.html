@@ -1,0 +1,108 @@
+<?php
+include '../../includes/header.php';
+$message = '';
+if(isset($_SESSION['message'])) {
+  $message = $_SESSION['message'];
+  unset($_SESSION['message']);
+}
+      
+$allPatients = WSModel::get_ws_service(BASE_WS_URL.$ws_url['allPatients']);
+// echo "<pre>"; print_r($allPatients); exit;
+?>
+
+  <?php include_once(BASE_DIR . 'includes/htmlheader.php');?>
+    <div class="wrapper">
+      <?php print mainHeader(); ?>      
+      
+      <?php print sideMenu(); ?>
+
+      <!-- Content Wrapper. Contains page content -->
+      <div class="content-wrapper">
+        <!-- Content Header (Page header) -->
+        <section class="content-header">
+          <h1>
+            Patients
+          </h1>
+          <ol class="breadcrumb">
+            <li><a href="<?php echo BASE_URL; ?>"><i class="fa fa-dashboard"></i> Home</a></li>
+            <li><a href="#"></i> Patients</a></li>
+            <li class="active">View Patients</li>
+          </ol>
+        </section>
+
+        <!-- Main content -->
+        <section class="content">
+          <div class="row">
+            <div class="col-xs-12">
+              <div class="box">
+                <div class="box-header">
+                  <?php echo $message; ?>
+                  <div class="add-link">
+                    <?php echo '<a class="btn btn-info pull-right" href="'.BASE_URL.'pages/patient/addPatient.html">ADD PATIENT</a>'; ?>
+                  </div>
+                </div><!-- /.box-header -->
+                <div class="box-body">
+                  <?php if(isset($allPatients->response) && !empty($allPatients->response)) { ?>
+                  <table id="patients-list" class="table table-bordered table-striped">
+                    <thead>
+                      <tr>
+                        <th>ID</th>
+                        <th>Firstname</th>
+                        <th>Lastname</th>
+                        <th>Phone</th>
+                        <th>Email</th>
+                        <th>Gender</th>
+                        <th>DOB</th>
+                        <th>Status</th>
+                        <th>Operations</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      
+                        <?php foreach ($allPatients->response as $key => $val) { if (!isset($val->firstname) ) continue;?>
+                          <?php
+                            $viewLink = '<a href="'.BASE_URL.'pages/patient/info.html?id='.$val->id.'">VIEW</a>';
+                            $editLink = '<a href="'.BASE_URL.'pages/patient/editPatient.html?id='.$val->id.'">EDIT</a>';
+                            // $deleteLink = '<a href="javascript:void(0);" class="pLidel" data-id="'.BASE_URL.'pages/patient/wsClient.php#'.$val->id.'" title="Are you sure you want to delete the Patient Info record?">DELETE</a>';
+                            // $operations = $viewLink.' | '.$editLink.' | '.$deleteLink;
+                            $operations = $viewLink.' | '.$editLink;
+                          ?>
+                          <tr id='pei-<?php echo $val->id; ?>'>
+                            <td><?php echo $val->id; ?></td>
+                            <td><?php echo ucfirst($val->firstname); ?></td>
+                            <td><?php echo ucfirst($val->lastname); ?></td>
+                            <td><?php echo $val->phone; ?></td>
+                            <td><?php echo $val->email; ?></td>
+                            <td><?php echo $val->gender; ?></td>
+                            <td><?php echo date("Y-m-d", strtotime($val->dob)); ?></td>
+                            <td><?php if($val->enabled =="") {echo "Inactive";}else { echo "Active";} ?></td>
+                            <td><?php echo $operations; ?></td>
+                          </tr>
+                        <?php } ?>
+                    </tbody>
+                  </table>
+                  <?php } else { ?>
+                    <p>No records found or the server is not reachable now. Please login again.</p>
+                  <?php } ?>
+                </div><!-- /.box-body -->
+              </div><!-- /.box -->
+            </div><!-- /.col -->
+          </div><!-- /.row -->
+        </section><!-- /.content -->
+      </div><!-- /.content-wrapper -->
+      <!-- Add the sidebar's background. This div must be placed
+           immediately after the control sidebar -->
+      <div class="control-sidebar-bg"></div>
+    </div><!-- ./wrapper -->
+    <?php include_once(BASE_DIR . 'includes/htmlfooter.php');?>
+    <!-- page script -->
+    <script>
+      $(function () {
+        $('#patients-list').DataTable();
+        // $(".ptdel").easyconfirm();
+        // $('.ptdel').click(function() {
+        //   var delID = $(this).attr('data-id');
+        //   alert(delID);
+        // });
+      });
+    </script>

@@ -1,0 +1,112 @@
+<?php
+include '../../includes/header.php';
+
+$message = '';
+
+if(isset($_POST) && !empty($_POST)) {
+  $postData = array(
+    "email" => $_POST['email'],
+    "clientUri" => BASE_URL.'pages/user/resetPassword.html'
+  );
+  //echo "<pre>"; print_r($postData);
+  $resetPassword = WSModel::get_ws_service(BASE_WS_URL.$ws_url['resetPassword'], $postData);
+  //echo "<pre>"; print_r($resetPassword); exit;
+  if(isset($resetPassword->error)) {
+    $message = '<div class="message error">'.$resetPassword->text.'</div>';
+  } else {
+    $message = '<div class="message status">'.$resetPassword->text.'</div>';
+  }
+}
+
+?>
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Remote Patient Care | Forgot Password</title>
+    <!-- Tell the browser to be responsive to screen width -->
+    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+    <!-- Bootstrap 3.3.5 -->
+    <link rel="stylesheet" href="../../bootstrap/css/bootstrap.min.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="../../dist/css/fonts/font-awesome.min.css">
+    <!-- Ionicons -->
+    <link rel="stylesheet" href="../../dist/css/fonts/ionicons.min.css">
+    <!-- Theme style -->
+    <link rel="stylesheet" href="../../dist/css/AdminLTE.min.css">
+    <!-- iCheck -->
+    <link rel="stylesheet" href="../../plugins/iCheck/square/blue.css">
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+        <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+  <body class="hold-transition login-page">
+    <div class="login-box">
+      <div class="login-logo">
+        <a href="../../index.html"><b>RPC</b> Admin</a>
+      </div><!-- /.login-logo -->
+      <div class="login-box-body">
+        <p class="login-box-msg">Reset your Password</p>
+        <?php echo $message; ?>
+        <form id="rpc-forgotPass" action="" method="post">
+          <div class="form-group has-feedback">
+            <input type="email" name="email" class="form-control" placeholder="Email">
+            <span class="glyphicon glyphicon-envelope form-control-feedback"></span>
+          </div>
+          <div class="row">
+            <div class="col-xs-6">
+            </div><!-- /.col -->
+            <div class="col-xs-6">
+              <button type="submit" class="btn btn-primary btn-block btn-flat">Reset Passsword</button>
+            </div><!-- /.col -->
+          </div>
+        </form>
+        
+        <a href="login.html">Sign In</a><br>
+
+      </div><!-- /.login-box-body -->
+    </div><!-- /.login-box -->
+
+    <!-- jQuery 2.1.4 -->
+    <script src="../../plugins/jQuery/jQuery-2.1.4.min.js"></script>
+    <!-- Bootstrap 3.3.5 -->
+    <script src="../../bootstrap/js/bootstrap.min.js"></script>
+    <script src="../../plugins/validate/jquery.validate.min.js"></script>
+    <script>
+      $(function () {
+        $("#rpc-forgotPass").validate({
+          onfocusout: false,//function(element) {$(element).valid();},
+          // Specify the validation rules
+          rules: {
+            email: {
+              required: true, email: true,emailvalidation:true, minlength: 3
+            }
+          },
+
+          // Specify the validation error messages
+          messages: {
+            email: {
+              required: "Please provide the email"
+            }
+          },
+
+          submitHandler: function(form) {
+            form.submit();
+          }
+        });
+        $.validator.addMethod("emailvalidation",
+          function(value, element) {
+            return /^\b[A-Z0-9._%-]+@[A-Z0-9.-]+\.[A-Z]{2,4}\b$/i.test(value);
+          },
+          "Please enter a valid email address."
+        );
+      });
+    </script>
+  </body>
+</html>

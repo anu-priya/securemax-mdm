@@ -1,0 +1,258 @@
+<?php
+include '../../includes/header.php';
+if(isset($_SESSION['user']) && is_numeric($_SESSION['user'])) {
+  // Do nothing
+  // echo "<pre>"; print_r($_SESSION); exit;
+} else {
+  header('Location: '.BASE_URL.'pages/user/login.html');
+}
+$message = '';
+
+if(isset($_POST) && !empty($_POST)) {
+
+  $app_date = date('Y-m-d H:i:s', strtotime($_POST['appointmentInputDate']));
+  $appoinement_date = $app_date[2]."-".$app_date[1]."-".$app_date[0];
+  
+  $postData = array(
+    "id" => $_POST['appointmentInputId'],
+    "appointmentDate" => date('Y-m-d H:i:s', strtotime($_POST['appointmentInputDate'])),
+    "duration" => $_POST['appointmentInputDuration'],
+	  "status" => $_POST['appointmentInputstatus'],
+    "patientId" => $_POST['appointmentInputPatientId'],
+    "doctorId" => $_POST['appointmentInputDoctorId'],
+    "careGiverId" => $_POST['appointmentInputCareGiver'],
+	  "tasks" => $_POST['appointmentInputTask']
+  );
+  
+  // echo "<pre>"; echo  $postData; exit;
+  
+  //echo BASE_WS_URL.$ws_url['authenticateUser'];
+  $appointmentUpdate = WSModel::get_ws_service(BASE_WS_URL.$ws_url['updateAppointment'], $postData, FALSE ,'PUT');
+  // echo "<pre>"; print_r($appointmentUpdate); exit;
+  if(isset($appointmentUpdate) && $appointmentUpdate->status == 1) {
+    $message = '<div class="alert alert-success alert-dismissable">
+                  <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                  <h4><i class="icon fa fa-check"></i> Success </h4>
+                  Appointment record updated.
+                </div>';
+  } else {
+    $message = '<div class="alert alert-danger alert-dismissable">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    <h4><i class="icon fa fa-ban"></i> Alert!</h4>
+                    Problem in updating the record.
+                  </div>';
+  }
+}
+if(isset($_GET['appId']) && is_numeric($_GET['appId'])) {
+  $appointmentData = WSModel::get_ws_service(BASE_WS_URL.$ws_url['appointmentData'].'/'.$_GET['appId']);
+  // echo "<pre>"; print_r($appointmentData); exit;
+  if(isset($appointmentData->status) && $appointmentData->status == 1) {
+    $appointment = $appointmentData->response;
+  }
+// echo "<pre>"; print_r($appointment); exit;
+}
+$allPatients = WSModel::get_ws_service(BASE_WS_URL.$ws_url['allPatients']);
+$allDoctors = WSModel::get_ws_service(BASE_WS_URL.$ws_url['allDoctors']);
+$allCareGivers = WSModel::get_ws_service(BASE_WS_URL.$ws_url['allCareGivers']);
+$allTasks = WSModel::get_ws_service(BASE_WS_URL.$ws_url['allTasks']);
+//echo "<pre>"; print_r($appointment->tasks); exit;
+
+?>
+<?php include_once(BASE_DIR . 'includes/htmlheader.php');?>
+    <div class="wrapper">
+      <?php print mainHeader(); ?>      
+      
+      <?php print sideMenu(); ?>
+
+      <!-- Content Wrapper. Contains page content -->
+      <div class="content-wrapper">
+        <!-- Content Header (Page header) -->
+        <section class="content-header">
+          <h1>
+            Edit Appointment
+          </h1>
+          <ol class="breadcrumb">
+            <li><a href="<?php echo BASE_URL; ?>"><i class="fa fa-dashboard"></i> Home</a></li>
+            <li><a href="<?php echo BASE_URL.'pages/appointment/appointments.html'; ?>"></i> Appointments</a></li>
+            <li class="active">Edit Appointment</li>
+          </ol>
+        </section>
+
+        <!-- Main content -->
+        <section class="content">
+          <div class="row">
+            <div class="col-xs-12">
+              <!-- general form elements -->
+              <div class="box box-primary">
+                <?php echo $message; ?>
+                <!-- form start -->
+
+                <div class="row">
+                  <form id="rpc-edit-appointment" action="" method="post">
+                    <div class="col-xs-6">
+                      <div class="box-body">
+                          <div class="form-group">
+                            <label for="appointmentInputDate">Appointment Date</label>
+                            <input type='text' class="form-control" id='datetimepicker1' name="appointmentInputDate" placeholder="Select Appointment Date" value="<?php echo $appointment->appointmentDate;?>" />
+                          </div>
+
+                        <div class="form-group">
+                          <!--<label for="appointmentInputDuration">Duration (mins)</label>
+                          <select class="form-control" id="appointmentInputDuration" name="appointmentInputDuration">
+							<option value="">--Select--</option>
+							<option value="10" <?php echo (($appointment->duration == 10)?'selected':'');?>>10</option>
+							<option value="20" <?php echo (($appointment->duration == 20)?'selected':'');?>>20</option>
+							<option value="30" <?php echo (($appointment->duration == 30)?'selected':'');?>>30</option>
+							<option value="40" <?php echo (($appointment->duration == 40)?'selected':'');?>>40</option>
+							<option value="50" <?php echo (($appointment->duration == 50)?'selected':'');?>>50</option>
+							<option value="60" <?php echo (($appointment->duration == 60)?'selected':'');?>>60</option>
+						  </select>-->
+						  <input type="hidden" value='<?php echo $appointment->duration;?>'class="form-control" id="appointmentInputDuration" name="appointmentInputDuration">
+						</div>
+                                                
+                        <div class="form-group">
+                          <label for="appointmentInputPatientId">Patient</label>
+						  <select class="form-control" id="appointmentInputPatientId" name="appointmentInputPatientId">
+							<option value="">--Select--</option>
+							<?php 
+							if(!empty($allPatients->response)) {
+								foreach($allPatients->response as $patient) {
+									echo '<option value="'.$patient->id.'" ' . (($patient->id == $appointment->patientId)?'selected':'') . '>'.$patient->firstname.' '.$patient->lastname.'</option>';
+								}
+							}
+							?>
+						  </select>
+                        </div>
+                        
+                        <div class="form-group">
+                          <label for="appointmentInputDoctorId">Doctor</label>
+						  <select class="form-control" id="appointmentInputDoctorId" name="appointmentInputDoctorId">
+							<option value="">--Select--</option>
+							<?php 
+							if(!empty($allDoctors->response)) {
+								foreach($allDoctors->response as $doctor) {
+									echo '<option value="'.$doctor->id.'" ' . (($doctor->id == $appointment->doctorId)?'selected':'') . '>'.$doctor->firstName.' '.$doctor->lastName.'</option>';
+								}
+							}
+							?>
+						  </select>
+                        </div>
+                        
+                        <div class="form-group">
+                          <label for="appointmentInputCareGiver">Care Giver</label>
+						  <select class="form-control" id="appointmentInputCareGiver" name="appointmentInputCareGiver">
+							<option value="">--Select--</option>
+							<?php 
+							if(!empty($allCareGivers->response)) {
+								foreach($allCareGivers->response as $caregiver) {
+									echo '<option value="'.$caregiver->id.'" ' . (($caregiver->id == $appointment->careGiverId)?'selected':'') . '>'.$caregiver->firstName.' '.$caregiver->lastName.'</option>';
+								}
+							}
+							?>
+						  </select>
+						</div>
+                        
+                        <!-- radio -->
+                        <div class="form-group">
+                          <label for="appointmentInputstatus">Status</label>
+                          <div class="radio">
+                            <label>
+                              <input type="radio" tabindex="9" name="appointmentInputstatus" id="optionsRadios1" value="1" <?php echo (($appointment->status == 1)?'checked':'');?>>
+                              Open
+                            </label>
+                          </div>
+						  <div class="radio">
+                            <label>
+                              <input type="radio" tabindex="10" name="appointmentInputstatus" id="optionsRadios2" value="2" <?php echo (($appointment->status == 2)?'checked':'');?>>
+                              Completed
+                            </label>
+                          </div>
+                          <div class="radio">
+                            <label>
+                              <input type="radio" tabindex="10" name="appointmentInputstatus" id="optionsRadios2" value="0" <?php echo (($appointment->status == 0)?'checked':'');?>>
+                              Cancelled
+                            </label>
+                          </div>
+                        </div>
+                        
+                        <div class="form-group">
+                          <label for="appointmentInputstatus">Tasks</label>
+						   <?php 
+							if(!empty($allTasks->response)) {
+								foreach($allTasks->response as $task) { if (!isset($task->taskname) ) continue; 
+						   ?>
+							<div class="checkbox">
+								<label><input type="checkbox" name="appointmentInputTask[]" value="<?php echo $task->id;?>" <?php echo (in_array($task->id, $appointment->tasks)?'checked':'');?>><?php echo $task->taskname;?></label>
+							</div>
+							<?php 
+								} 
+							} else {
+								echo '<p style="color:red">No Tasks Available</p>';
+							}
+							?>
+                        </div>
+						<div class="box-footer">
+						  <input type="hidden" class="form-control" id="appointmentInputId" name="appointmentInputId" value="<?php echo $appointment->id; ?>">
+                          <button type="submit" class="btn btn-primary" tabindex="12">Submit</button>
+                        </div>
+                        
+                      </div><!-- /.box-body -->
+                    </div>
+                    
+                    
+                    <div class="col-xs-6">
+                      <div class="box-body">
+                      </div>
+                    </div>
+
+                    
+                  </form>
+                </div>
+                
+              </div><!-- /.box -->
+            </div><!-- /.col -->
+          </div><!-- /.row -->
+        </section><!-- /.content -->
+      </div><!-- /.content-wrapper -->
+     <?php include_once(BASE_DIR . 'includes/htmlfooter.php');?>
+    </div><!-- ./wrapper -->
+	<script>
+      $(function () {
+      $('#datetimepicker1').datetimepicker({
+        format: 'Y-m-d H:i',
+        step: 1,
+        maxDate: 0
+      });
+        $('#appointments-list').DataTable();
+        //$("#appointmentInputDob").inputmask("yyyy-mm-dd", {"placeholder": "yyyy-mm-dd"});
+        
+        $("#rpc-edit-appointment").validate({
+          //onfocusout: false,//function(element) {$(element).valid();},
+          // Specify the validation rules
+		  onfocusout: function(element) {$(element).valid()},
+          rules: {
+		  
+            appointmentInputDate: {required: true},
+			appointmentInputDate: {required: true},
+            appointmentInputDuration: {required: true},
+            appointmentInputPatientId: {required: true},
+            appointmentInputDoctorId: {required: true},
+            appointmentInputCareGiver: {required: true},
+            appointmentInputstatus: {required: true},
+			'appointmentInputTask[]': {
+              required: true,
+                maxlength: 100
+            }
+          },
+		  messages: {
+            'appointmentInputTask[]': {
+                required: "<p>You must check at least 1 box</p>"
+            }
+        }
+          /*submitHandler: function(form) {
+            form.submit();
+          }*/
+        });
+      });
+    </script>
+ 

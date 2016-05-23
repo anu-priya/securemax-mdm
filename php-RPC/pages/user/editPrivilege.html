@@ -1,0 +1,114 @@
+<?php
+include '../../includes/header.php';
+$message = '';
+
+if(isset($_POST) && !empty($_POST)) {
+  $postData = array(
+    "id" => $_POST['privilegeId'],
+    "name" => $_POST['privilegename']
+  );
+  
+  //echo "<pre>"; print_r($postData); exit;
+  
+
+  $updatePrivilege = WSModel::get_ws_service(BASE_WS_URL.$ws_url['updatePrivilege'], $postData);
+  // echo "<pre>"; print_r($taskUpdate); exit;
+
+  if(isset($updatePrivilege) && $updatePrivilege->status == 1) {
+    $message = '<div class="alert alert-success alert-dismissable">
+                  <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                  <h4><i class="icon fa fa-check"></i> Success </h4>
+                  Privilege record updated.
+                </div>';
+  } else {
+    $message = '<div class="alert alert-danger alert-dismissable">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    <h4><i class="icon fa fa-ban"></i> Alert!</h4>
+                    Problem in updating the record.
+                  </div>';
+  }
+}
+
+if(isset($_GET['privilegeId']) && is_numeric($_GET['privilegeId'])) {
+  $privilegeData = WSModel::get_ws_service(BASE_WS_URL.$ws_url['privilegeData'].$_GET['privilegeId']);
+  
+  if(isset($privilegeData->status) && $privilegeData->status == 1) {
+    $privilege = $privilegeData->response;
+  }
+  // echo "<pre>"; print_r($privilege); exit;
+}
+?>
+
+<?php include_once(BASE_DIR . 'includes/htmlheader.php');?>
+    <div class="wrapper">
+      <?php print mainHeader(); ?>      
+      
+      <?php print sideMenu(); ?>
+
+      <!-- Content Wrapper. Contains page content -->
+      <div class="content-wrapper">
+        <!-- Content Header (Page header) -->
+        <section class="content-header">
+          <h1>
+            Edit Privilege
+          </h1>
+          <ol class="breadcrumb">
+            <li><a href="<?php echo BASE_URL; ?>"><i class="fa fa-dashboard"></i> Home</a></li>
+            <li><a href="<?php echo BASE_URL.'pages/user/privileges.html'; ?>"></i> Privileges</a></li>
+            <li class="active">Edit Privilege</li>
+          </ol>
+        </section>
+
+        <!-- Main content -->
+        <section class="content">
+          <div class="row">
+            <div class="col-xs-12">
+              <!-- general form elements -->
+              <div class="box box-primary">
+                <?php echo $message; ?>
+                <!-- form start -->
+
+                <div class="row">
+                  <form id="rpc-edit-relation" action="" method="post">
+                    <div class="col-xs-6">
+                      <div class="box-body">
+                        <div class="form-group">
+                          <label for="taskname">Privilege</label>
+                          <input type="text" tabindex="1" class="form-control" id="privilegename" name="privilegename" placeholder="Enter Privilege" value="<?php echo $privilege->name; ?>">
+                        </div>
+                        
+                        <div class="box-footer">
+                          <input type="hidden" class="form-control" id="privilegeId" name="privilegeId" value="<?php echo $privilege->id; ?>">
+                          <button type="submit" class="btn btn-primary" tabindex="2">Submit</button>
+                        </div>
+                        
+                      </div><!-- /.box-body -->
+                    </div>
+                  </form>
+                </div>
+                
+              </div><!-- /.box -->
+            </div><!-- /.col -->
+          </div><!-- /.row -->
+        </section><!-- /.content -->
+      </div><!-- /.content-wrapper -->
+	  <?php include_once(BASE_DIR . 'includes/htmlfooter.php');?>
+    </div><!-- ./wrapper -->
+	
+    <script>
+      $(function () {
+        
+        $("#rpc-edit-relation").validate({
+          onfocusout: false,//function(element) {$(element).valid();},
+          // Specify the validation rules
+          rules: {
+            taskname: {required: true}
+          },
+
+          submitHandler: function(form) {
+            form.submit();
+          }
+        });
+      });
+    </script>
+

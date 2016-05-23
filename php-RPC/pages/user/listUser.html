@@ -1,0 +1,165 @@
+<?php
+include '../../includes/header.php';
+$message = '';
+if(isset($_SESSION['message'])) {
+  $message = $_SESSION['message'];
+  unset($_SESSION['message']);
+}
+$allUsers = WSModel::get_ws_service(BASE_WS_URL.$ws_url['allUsers']);
+$allRoles = WSModel::get_ws_service(BASE_WS_URL.$ws_url['allRoles']);
+if(isset($_POST) && !empty($_POST)) {
+  if(!empty($_POST['userInputRole'])) {
+    if($_POST['userInputRole']) {
+      $allRoleUser = WSModel::get_ws_service(BASE_WS_URL.$ws_url['searchRole'].$_POST['userInputRole']);
+    }
+  }
+} else {
+  $allRoleUser = WSModel::get_ws_service(BASE_WS_URL.$ws_url['allUsers']);
+}
+?>
+<?php include_once(BASE_DIR . 'includes/htmlheader.php');?>
+    <div class="wrapper">
+      <?php print mainHeader(); ?>      
+      
+      <?php print sideMenu(); ?>
+
+      <!-- Content Wrapper. Contains page content -->
+      <div class="content-wrapper">
+        <!-- Content Header (Page header) -->
+        <section class="content-header">
+          <h1>
+            Users
+          </h1>
+          <ol class="breadcrumb">
+            <li><a href="<?php echo BASE_URL; ?>"><i class="fa fa-dashboard"></i> Home</a></li>
+            <li><a href="#">Users</a></li>
+            <li class="active">View Users</li>
+          </ol>
+        </section>
+		<!-- Main content -->
+        <section class="content">
+          <div class="row">
+            <div class="col-xs-12">
+              <div class="box">
+                <div class="box-header">
+                  <?php echo $message; ?>
+                  <div class="add-link">
+                    <?php echo '<a class="btn btn-info pull-right" href="'.BASE_URL.'pages/user/addUser.html">Add User</a>'; ?>
+                  </div>
+				   <form id="rpc-search-role" action="" method="post">
+                  <div class="col-xs-6">
+                    <div class="box-body">
+                      <div class="form-group">
+                        <label for="userInputRole">Search By</label>
+                        <select class="form-control" id="userInputRole" name="userInputRole">
+                            <option value=""> -- Select a Role --</option>
+                            <?php 
+                            $role = $allRoles->response;
+                            if(!empty($role)) {
+                                 foreach ($role as $listrole) {
+                                    if((isset($roleid) == $listrole->id)) {
+                                      echo '<option selected id="roleID" value="'.$listrole->name.'">'.$listrole->name.'</option>';
+                                    } else {
+                                      echo '<option value="'.$listrole->name.'">'.$listrole->name.'</option>';
+                                    }
+                                 }
+                            }
+                            ?>
+                           </select>
+                      </div>
+                    </div>
+                  </div>
+                </form>
+                </div><!-- /.box-header -->
+               
+                <div class="box-body">
+                  <?php if(isset($allRoleUser->response) && !empty($allRoleUser->response)) { ?>
+                  <table id="users-list" class="table table-bordered table-striped">
+                    <thead>
+                      <tr>
+                        <th>ID</th>
+                        <th>Firstname</th>
+                        <th>Lastname</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>DOB</th>
+                        <th>Gender</th>
+                        <th>Operations</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      
+                        <?php foreach ($allRoleUser->response as $key => $val) { ?>
+                          <?php
+                            $viewLink = '<a href="'.BASE_URL.'pages/patient/info.html?id='.$val->id.'">VIEW</a>';
+                            $editLink = '<a href="'.BASE_URL.'pages/user/editUser.html?id='.$val->id.'">EDIT</a>';
+                            $deleteLink = '<a href="'.BASE_URL.'pages/user/deleteUser.php?id='.$val->id.'" title="Delete" class="ptdel" data-id="'.$val->id.'" title="Are you sure you want to delete the user record?">DELETE</a>';
+                            $operations = $editLink.' | '.$deleteLink;
+                            $dobInfo = 'NA';
+                            $currentrole = 'NA';
+                            $gender = 'NA';
+							  if (isset($val->userInfo)) $dobInfo = $val->userInfo->dob;
+							  if (isset($val->userInfo)) $gender = $val->userInfo->gender;
+							  if (isset($val->roles)) $currentrole = $val->roles[0]->name;
+						?>
+                          <tr>
+                            <td><?php echo $val->id; ?></td>
+                            <td><?php echo ucfirst($val->firstName); ?></td>
+                            <td><?php echo ucfirst($val->lastName); ?></td>
+                            <td><?php echo $val->userName; ?></td>
+                            <td><?php echo $val->email; ?></td>
+                            <td class="<?php echo $currentrole;?>"><?php echo $currentrole; ?></td>
+                            <td><?php echo date("Y-m-d", $dobInfo); ?></td>
+                            <td><?php echo $gender; ?></td>
+                            <td><?php echo $operations; ?></td>
+                          </tr>
+                        <?php } ?>
+                    </tbody>
+                  </table>
+                  <?php } else { ?>
+                    <p>No records found or the server is not reachable now. Please login again.</p>
+                  <?php } ?>
+                </div><!-- /.box-body -->
+              </div><!-- /.box -->
+            </div><!-- /.col -->
+          </div><!-- /.row -->
+        </section><!-- /.content -->
+      </div><!-- /.content-wrapper -->
+      <?php include_once(BASE_DIR . 'includes/htmlfooter.php');?>
+	   </div><!-- wrapper -->
+<script>
+$(function () {
+	$("#users-list").dataTable({});
+	$(".ptdel").easyconfirm();
+    $('.ptdel').click(function() {
+          var delID = $(this).attr('data-id');
+          //alert(delID);
+          /*
+          if(checkstr == true){
+            alert("HIere");  
+            $.ajax({
+              method: 'GET',
+              url: "delete.php",
+              data: {action: "pt", id: delID}
+            }).done(function( data ) {
+              alert(data);
+              if(data > 0) {
+                $('#tr_'+delID).remove();
+                alert("Patient deleted successfully");
+              }
+            });
+          }else{
+          return false;
+          }
+          */
+        });
+	var oTable;
+	oTable = $('#users-list').dataTable();
+	$('#userInputRole').on('change',function(){
+		var selectedValue = $(this).val();
+		oTable.fnFilter( selectedValue );
+	});
+});
+</script>
+
